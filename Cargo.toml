@@ -24,6 +24,7 @@ serde_json = "1.0.140"
 tracing = { version = "0.1.41", features = ["max_level_trace", "release_max_level_debug"] }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 tracy-client = { version = "0.18.1", default-features = false }
+zbus = "5.7.1"
 
 [workspace.dependencies.smithay]
 # version = "0.4.1"
@@ -91,7 +92,7 @@ url = { version = "2.5.4", optional = true }
 wayland-backend = "0.3.10"
 wayland-scanner = "0.31.6"
 xcursor = "0.3.10"
-zbus = { version = "5.7.1", optional = true }
+zbus = { workspace = true, optional = true }
 
 [dependencies.smithay]
 workspace = true
@@ -124,7 +125,7 @@ xshell = "0.2.7"
 [features]
 default = ["dbus", "systemd", "xdp-gnome-screencast"]
 # Enables D-Bus support (serve various freedesktop and GNOME interfaces, power button handling).
-dbus = ["dep:zbus", "dep:async-io", "dep:url"]
+dbus = ["dep:zbus", "dep:async-io", "dep:url", "niri-config/dbus"]
 # Enables systemd integration (global environment, apps in transient scopes).
 systemd = ["dbus"]
 # Enables screencasting support through xdg-desktop-portal-gnome.

@@ -373,3 +373,24 @@ binds {
     Super+Alt+L allow-inhibiting=false { spawn "swaylock"; }
 }
 ```
+
+#### `dbus`
+
+<sup>Since: next release</sup>
+
+Allows calling a method on a D-Bus object.
+
+```kdl
+binds {
+    Mod+Return {
+        dbus {
+            service "com.mitchellh.ghostty"
+            object "/com/mitchellh/ghostty"
+            interface "org.gtk.Actions"
+            method "Activate"
+        }
+    }
+}
+```
+
+The bus address can be specified in the `bus` property, using the [D-Bus address format](https://dbus.freedesktop.org/doc/dbus-specification.html#addresses). Two special values are also provided: `session`, to connect to the session bus, and `system`, to connect to the system bus. If omitted, `session` is the default.

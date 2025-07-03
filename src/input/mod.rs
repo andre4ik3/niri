@@ -584,6 +584,49 @@ impl State {
                 let (token, _) = self.niri.activation_state.create_external_token(None);
                 spawn(command, Some(token.clone()));
             }
+            #[cfg(feature = "dbus")]
+            Action::Dbus(params) => {
+                let connection = {
+                    if let Some(connection) = self.niri.dbus_buses.get(&params.bus) {
+                        connection
+                    } else {
+                        debug!("connecting to bus {}", params.bus);
+                        let address = match params.bus.address() {
+                            Ok(address) => address,
+                            Err(err) => {
+                                error!("failed to get bus address for {}: {err}", params.bus);
+                                return;
+                            }
+                        };
+                        let connection = match zbus::blocking::connection::Builder::address(address)
+                            .and_then(|c| c.build())
+                        {
+                            Ok(connection) => connection,
+                            Err(err) => {
+                                error!("failed to connect to bus {}: {err}", params.bus);
+                                return;
+                            }
+                        };
+                        self.niri.dbus_buses.insert(params.bus.clone(), connection);
+                        self.niri.dbus_buses.get(&params.bus).unwrap()
+                    }
+                };
+                debug!(
+                    "calling dbus method {}.{} on object {}",
+                    params.interface, params.method, params.object
+                );
+                let res = connection.call_method(
+                    Some(zbus::names::BusName::WellKnown(params.service.into())),
+                    params.object,
+                    Some(params.interface),
+                    params.method,
+                    // body, -- TODO arguments
+                    &(),
+                );
+                if let Err(err) = res {
+                    error!("dbus method call failed: {err}");
+                }
+            }
             Action::DoScreenTransition(delay_ms) => {
                 self.backend.with_primary_renderer(|renderer| {
                     self.niri.do_screen_transition(renderer, delay_ms);

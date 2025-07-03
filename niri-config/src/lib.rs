@@ -9,6 +9,8 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use bitflags::bitflags;
+#[cfg(feature = "dbus")]
+use dbus_action::DBusAction;
 use knuffel::errors::DecodeError;
 use knuffel::Decode as _;
 use layer_rule::LayerRule;
@@ -27,6 +29,9 @@ pub const DEFAULT_BACKGROUND_COLOR: Color = Color::from_array_unpremul([0.25, 0.
 pub const DEFAULT_BACKDROP_COLOR: Color = Color::from_array_unpremul([0.15, 0.15, 0.15, 1.]);
 
 pub mod layer_rule;
+
+#[cfg(feature = "dbus")]
+pub mod dbus_action;
 
 mod utils;
 pub use utils::RegexEq;
@@ -1690,6 +1695,8 @@ pub enum Action {
     DebugToggleOpaqueRegions,
     DebugToggleDamage,
     Spawn(#[knuffel(arguments)] Vec<String>),
+    #[cfg(feature = "dbus")]
+    Dbus(DBusAction), // Dbus instead of DBus so knuffel turns it into `dbus`
     DoScreenTransition(#[knuffel(property(name = "delay-ms"))] Option<u16>),
     #[knuffel(skip)]
     ConfirmScreenshot {

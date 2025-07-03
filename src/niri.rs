@@ -370,7 +370,11 @@ pub struct Niri {
     pub debug_draw_damage: bool,
 
     #[cfg(feature = "dbus")]
-    pub dbus: Option<crate::dbus::DBusServers>,
+    pub dbus_servers: Option<crate::dbus::DBusServers>,
+
+    #[cfg(feature = "dbus")]
+    pub dbus_buses: HashMap<niri_config::dbus_action::DBusBus, zbus::blocking::Connection>,
+
     #[cfg(feature = "dbus")]
     pub inhibit_power_key_fd: Option<zbus::zvariant::OwnedFd>,
 
@@ -2601,7 +2605,9 @@ impl Niri {
             debug_draw_damage: false,
 
             #[cfg(feature = "dbus")]
-            dbus: None,
+            dbus_servers: None,
+            #[cfg(feature = "dbus")]
+            dbus_buses: HashMap::new(),
             #[cfg(feature = "dbus")]
             inhibit_power_key_fd: None,
 
@@ -5234,7 +5240,7 @@ impl Niri {
             }
         }
 
-        let dbus = &self.dbus.as_ref().unwrap();
+        let dbus = &self.dbus_servers.as_ref().unwrap();
         let server = dbus.conn_screen_cast.as_ref().unwrap().object_server();
         let path = format!("/org/gnome/Mutter/ScreenCast/Session/u{}", session_id);
         if let Ok(iface) = server.interface::<_, mutter_screen_cast::Session>(path) {
@@ -5838,7 +5844,9 @@ impl Niri {
     pub fn on_ipc_outputs_changed(&self) {
         let _span = tracy_client::span!("Niri::on_ipc_outputs_changed");
 
-        let Some(dbus) = &self.dbus else { return };
+        let Some(dbus) = &self.dbus_servers else {
+            return;
+        };
         let Some(conn_display_config) = dbus.conn_display_config.clone() else {
             return;
         };

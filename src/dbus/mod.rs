@@ -125,7 +125,7 @@ impl DBusServers {
             }
         }
 
-        niri.dbus = Some(dbus);
+        niri.dbus_servers = Some(dbus);
     }
 }
 
