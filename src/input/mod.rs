@@ -611,21 +611,31 @@ impl State {
                         self.niri.dbus_buses.get(&params.bus).unwrap()
                     }
                 };
+
                 debug!(
                     "calling dbus method {}.{} on object {}",
                     params.interface, params.method, params.object
                 );
-                let res = connection.call_method(
-                    Some(zbus::names::BusName::WellKnown(params.service.into())),
-                    params.object,
-                    Some(params.interface),
-                    params.method,
-                    // body, -- TODO arguments
-                    &(),
-                );
-                if let Err(err) = res {
-                    error!("dbus method call failed: {err}");
-                }
+
+                // TODO arguments
+                let message = zbus::Message::method_call(params.object, params.method)
+                    .and_then(|m| {
+                        m.destination(zbus::names::BusName::WellKnown(params.service.into()))
+                    })
+                    .and_then(|m| m.interface(params.interface))
+                    .and_then(|m| m.build(&()));
+
+                let message = match message {
+                    Ok(message) => message,
+                    Err(err) => {
+                        error!("failed building dbus message: {err}");
+                        return;
+                    }
+                };
+
+                if let Err(err) = connection.send(&message) {
+                    warn!("dbus method call failed: {err}");
+                };
             }
             Action::DoScreenTransition(delay_ms) => {
                 self.backend.with_primary_renderer(|renderer| {
